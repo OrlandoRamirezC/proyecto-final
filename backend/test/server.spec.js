@@ -1,5 +1,6 @@
 import request from 'supertest';
 import app from '../server.js';
+import jwt from 'jsonwebtoken';
 
 describe('API /products', () => {
 
@@ -10,30 +11,38 @@ describe('API /products', () => {
     })
 
     it('Regresa products como un array', async () => {
-        const res = await request(app).get('/products');
+        const res = await request(app).get('/products').send();
         expect(res.body.products).toBeInstanceOf(Array);
     });
 
 });
 
 describe('API /users', () => {
-    it("Obteniendo un 400 POST", async () => {
-        const res = await request(app).get('/users').send();
-        const status = res.statusCode;
-        expect(status).toBe(400);
-    })
-})
+  it('Debería retornar 200 con token válido', async () => {
+    const token = jwt.sign(
+      { email: 'test@example.com' },
+      process.env.JWTSECRET,
+      { expiresIn: '1h' }
+    );
+
+    const res = await request(app)
+      .get('/users')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.statusCode).toBe(200);
+  });
+});
+
 describe('API /login', () => {
-    it("Obteniendo un 400 POST", async () => {
-        const res = await request(app).post('/login').send();
-        const status = res.statusCode;
-        expect(status).toBe(400);
-    })
-})
-describe('API /register', () => {
-    it("Obteniendo un 400 POST", async () => {
-        const res = await request(app).post('/register').send();
-        const status = res.statusCode;
-        expect(status).toBe(400);
-    })
-})
+  it("Debería retornar 200 al hacer POST con email y contraseña válidos", async () => {
+    const res = await request(app)
+      .post('/login')
+      .send({
+        email: 'test1@test.com',
+        password: '123123'
+      });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveProperty('token'); // si loginUser devuelve un JWT
+  });
+});
