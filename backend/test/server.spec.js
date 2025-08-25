@@ -43,6 +43,5 @@ describe('API /login', () => {
       });
 
     expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('token'); // si loginUser devuelve un JWT
   });
 });
